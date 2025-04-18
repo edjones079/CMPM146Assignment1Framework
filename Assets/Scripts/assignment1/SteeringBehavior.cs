@@ -28,6 +28,44 @@ public class SteeringBehavior : MonoBehaviour
 
         // you can use kinematic.SetDesiredSpeed(...) and kinematic.SetDesiredRotationalVelocity(...)
         //    to "request" acceleration/decceleration to a target speed/rotational velocity
+        UnityEngine.Debug.Log(target);
+        float arrivalRadius = 2.0f;
+        Vector3 direction = target - transform.position;
+        float distance = direction.magnitude;
+        if (distance < arrivalRadius)
+        {
+            kinematic.SetDesiredSpeed(0);
+            kinematic.SetDesiredRotationalVelocity(0);
+            return;
+        }
+        Vector3 forward = transform.forward;
+
+        float angle = Vector3.SignedAngle(forward, direction, Vector3.up);
+
+        float angleThreshold = 1f; 
+
+        if (Mathf.Abs(angle) > angleThreshold)
+        {
+            kinematic.SetDesiredRotationalVelocity(angle);
+        }
+        else
+        {
+            kinematic.SetDesiredRotationalVelocity(0); 
+        }
+
+
+        float maxSpeed = kinematic.max_speed;
+        float speed = Mathf.Min(maxSpeed, distance); 
+        kinematic.SetDesiredSpeed(speed);
+
+        if (distance < 1.0f) {
+            if (path == null) return;
+            target = path[0];
+            path.RemoveAt(0);
+            if (path.Count == 0) {
+                path = null;
+            }
+        }
     }
 
     public void SetTarget(Vector3 target)
