@@ -65,7 +65,9 @@ public class SteeringBehavior : MonoBehaviour
 
 
         float maxSpeed = kinematic.max_speed;
-        float angleFactor = Mathf.Clamp01(1f - (angleAbs / 90f)); 
+        float minSpeedFactor = 0.2f;
+        float angleFactor = Mathf.Exp(-angleAbs / 45f);
+        angleFactor = Mathf.Clamp(angleFactor, minSpeedFactor, 1f);
 
         float baseSpeed = Mathf.Min(maxSpeed, distance);
         float adjustedSpeed = baseSpeed * angleFactor;
