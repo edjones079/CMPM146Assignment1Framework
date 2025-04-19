@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using System.Security.Cryptography;
+using System;
 
 public class SteeringBehavior : MonoBehaviour
 {
@@ -28,10 +30,18 @@ public class SteeringBehavior : MonoBehaviour
 
         // you can use kinematic.SetDesiredSpeed(...) and kinematic.SetDesiredRotationalVelocity(...)
         //    to "request" acceleration/decceleration to a target speed/rotational velocity
-        float arrivalRadius = 4.0f;
+        float arrivalRadius = 5.0f;
+        float nextTurn = 0.0f;
+
         if (path != null && path.Count > 0)
         {
             target = path[0];
+        }
+
+        if (path != null && path.Count > 1)
+        {
+            nextTurn = Vector3.SignedAngle(path[0] - transform.position, path[1] - path[0], Vector3.up);
+            UnityEngine.Debug.Log(nextTurn);
         }
 
         Vector3 direction = target - transform.position;
@@ -56,23 +66,32 @@ public class SteeringBehavior : MonoBehaviour
             }
             return;
         }
+
         Vector3 forward = transform.forward;
 
         float angle = Vector3.SignedAngle(forward, direction, Vector3.up);
-        kinematic.SetDesiredRotationalVelocity(angle);
 
         float angleAbs = Mathf.Abs(angle);
 
-
         float maxSpeed = kinematic.max_speed;
         float minSpeedFactor = 0.2f;
+
         float angleFactor = Mathf.Exp(-angleAbs / 45f);
         angleFactor = Mathf.Clamp(angleFactor, minSpeedFactor, 1f);
 
         float baseSpeed = Mathf.Min(maxSpeed, distance);
-        float adjustedSpeed = baseSpeed * angleFactor;
+
+        float adjustedSpeed = baseSpeed;
+
+        
+
+        if (Math.Abs(nextTurn) > 90f)
+        {
+            adjustedSpeed = baseSpeed * angleFactor;
+        }
 
         kinematic.SetDesiredSpeed(adjustedSpeed);
+        kinematic.SetDesiredRotationalVelocity(angle);
     }
 
     public void SetTarget(Vector3 target)
