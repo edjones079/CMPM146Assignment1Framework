@@ -28,7 +28,7 @@ public class SteeringBehavior : MonoBehaviour
 
         // you can use kinematic.SetDesiredSpeed(...) and kinematic.SetDesiredRotationalVelocity(...)
         //    to "request" acceleration/decceleration to a target speed/rotational velocity
-        float arrivalRadius = 2.0f;
+        float arrivalRadius = 4.0f;
         if (path != null && path.Count > 0)
         {
             target = path[0];
@@ -61,19 +61,16 @@ public class SteeringBehavior : MonoBehaviour
         float angle = Vector3.SignedAngle(forward, direction, Vector3.up);
         kinematic.SetDesiredRotationalVelocity(angle);
 
+        float angleAbs = Mathf.Abs(angle);
+
 
         float maxSpeed = kinematic.max_speed;
-        float speed = Mathf.Min(maxSpeed, distance); 
-        kinematic.SetDesiredSpeed(speed);
+        float angleFactor = Mathf.Clamp01(1f - (angleAbs / 90f)); 
 
-        if (distance < 1.0f) {
-            if (path == null) return;
-            target = path[0];
-            path.RemoveAt(0);
-            if (path.Count == 0) {
-                path = null;
-            }
-        }
+        float baseSpeed = Mathf.Min(maxSpeed, distance);
+        float adjustedSpeed = baseSpeed * angleFactor;
+
+        kinematic.SetDesiredSpeed(adjustedSpeed);
     }
 
     public void SetTarget(Vector3 target)
