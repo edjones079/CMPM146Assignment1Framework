@@ -16,11 +16,77 @@ public class PathFinder : MonoBehaviour
     // Take a look at StandaloneTests.cs for some test cases
     public static (List<Vector3>, int) AStar(GraphNode start, GraphNode destination, Vector3 target)
     {
-        // Implement A* here
-        List<Vector3> path = new List<Vector3>() { target };
+        var openSet = new SortedList<float, GraphNode>();
+        var openCosts = new Dictionary<int, float>();
+        var cameFrom = new Dictionary<int, (GraphNode, GraphNeighbor)>();
+        var gScore = new Dictionary<int, float>();
+        var fScore = new Dictionary<int, float>();
+        var closedSet = new HashSet<int>();
 
-        // return path and number of nodes expanded
-        return (path, 0);
+        int expanded = 0;
+
+        int startID = start.GetID();
+        gScore[startID] = 0f;
+        fScore[startID] = Vector3.Distance(start.GetCenter(), target);
+        openSet.Add(fScore[startID] + startID * 1e-6f, start);
+        openCosts[startID] = fScore[startID];
+
+        while (openSet.Count > 0)
+        {
+            var current = openSet.Values[0];
+            openSet.RemoveAt(0);
+            int currentID = current.GetID();
+
+            if (closedSet.Contains(currentID))
+                continue;
+
+            closedSet.Add(currentID);
+            expanded++;
+
+            if (currentID == destination.GetID())
+            {
+                List<Vector3> path = new List<Vector3>();
+                int nodeId = currentID;
+
+                while (cameFrom.ContainsKey(nodeId))
+                {
+                    var (prevNode, neighbor) = cameFrom[nodeId];
+                    path.Add(neighbor.GetWall().midpoint);
+                    nodeId = prevNode.GetID();
+                }
+
+                path.Reverse();
+                path.Add(target);
+                return (path, expanded);
+            }
+
+            foreach (var neighbor in current.GetNeighbors())
+            {
+                var neighborNode = neighbor.GetNode();
+                int neighborID = neighborNode.GetID();
+
+                if (closedSet.Contains(neighborID))
+                    continue;
+
+                float tentativeG = gScore[currentID] + Vector3.Distance(current.GetCenter(), neighborNode.GetCenter());
+
+                if (!gScore.ContainsKey(neighborID) || tentativeG < gScore[neighborID])
+                {
+                    cameFrom[neighborID] = (current, neighbor);
+                    gScore[neighborID] = tentativeG;
+                    float h = Vector3.Distance(neighborNode.GetCenter(), target);
+                    float totalCost = tentativeG + h;
+
+                    if (!openCosts.ContainsKey(neighborID) || totalCost < openCosts[neighborID])
+                    {
+                        openSet.Add(totalCost + neighborID * 1e-6f, neighborNode);
+                        openCosts[neighborID] = totalCost;
+                    }
+                }
+            }
+        }
+
+        return (new List<Vector3>(), expanded);
 
     }
 
