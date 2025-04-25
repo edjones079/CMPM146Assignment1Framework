@@ -33,6 +33,7 @@ public class PathFinder : MonoBehaviour
 
         while (openSet.Count > 0)
         {
+            // Get the current node from openSet
             var current = openSet.Values[0];
             openSet.RemoveAt(0);
             int currentID = current.GetID();
@@ -86,7 +87,7 @@ public class PathFinder : MonoBehaviour
             }
         }
 
-        return (new List<Vector3>(), expanded);
+        return (new List<Vector3>(), expanded); //Returns the path calculated by A*
 
     }
 
